@@ -21,19 +21,19 @@ app.use(express.json())
 //------------------------ Verify JWT Web Token -----------------------------------------//
 
 const verifyJWT = (req, res, next) => {
-  const authorization = trq.headers.authorization;
+  const authorization = req.headers.authorization;
   if(!authorization) {
     return res.status(401).send({message: 'Invalid authorization'})
   }
 
-  const token = authorization?.split('')[1];
-  jwt.verify(token, process.env.ACCESS_SECRET, (err, decoded) =>{
-    if (err) {
-      return res.status(403).send({message: 'Forbidden access'})
-    }
-    req.decoded = decoded;
-    next();
-  })
+  const token = authorization?.split(' ')[1]
+    jwt.verify(token, process.env.ACCESS_SECRET, (err, decoded) => {
+        if (err) {
+            return res.status(403).send({ error: true, message: 'forbidden user or token has expired' })
+        }
+        req.decoded = decoded;
+        next()
+    })
 }
 
 
@@ -298,8 +298,8 @@ async function run() {
         const email = req.params.email;
         const query = {userMail: email};
         const projection = {classId: 1};
-        const carts = await cartCollection.find(query,{projection: projection});
-        const classIds = carts.map((cart) => new ObjectId(cart.classId));
+        const carts = await cartCollection.find(query, { projection: projection }).toArray();
+        const classIds = carts.map(cart => new ObjectId(cart.classId));
         const query2 = {_id: {$in: classIds}};
         const result = await classesCollection.find(query2).toArray();
         res.send(result);
@@ -321,7 +321,7 @@ async function run() {
       const { price } = req.body;
       const amount = parseInt(price) * 100;
       const paymentIntent = await stripe.paymentIntents.create({
-        amount: calculateOrderAmount(items),
+        amount: amount,
         currency: "usd",
         payment_method_types: ["card"],
       });
@@ -405,7 +405,7 @@ async function run() {
 
     app.get("/popular_instructors" , async (req, res) => {
 
-      const pipieline = [
+      const pipeline = [
         {
         $group: {
           _id: "$instructorEmail",
@@ -423,13 +423,13 @@ async function run() {
         }
       },
       {
-        $projects: {
+        $project: {
           _id: 0,
           instructor: {
-            $arrayElemant: ["$instructor", 0]
+              $arrayElemAt: ["$instructor", 0]
           },
           totalEnrolled: 1
-        }
+      }
       },
       {
         $sort: {

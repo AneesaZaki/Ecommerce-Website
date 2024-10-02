@@ -22,7 +22,7 @@ const PopularClasses = () => {
     // console.log(classes)
 
   return (
-    <div className='md-w-[80%] mx-auto my-36'>
+    <div className='md:w-[80%] mx-auto my-36'>
         <div>
         <h1 className='text-5xl font-bold text-center'>Our <span className='text-secondary'> Popular </span> 
         Classes</h1>
@@ -35,7 +35,7 @@ const PopularClasses = () => {
 
         </div>
         
-        <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-8'>
+        <div className='grid md:grid-cols-2 lg:grid-cols-3 gap-4'>
             {
                 classes.map((item, index) => <Card key={index} item ={item}/> )
             }
